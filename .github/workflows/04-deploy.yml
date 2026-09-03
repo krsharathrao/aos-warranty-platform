@@ -1,0 +1,30 @@
+name: 04 - Deploy Data Platform
+on:
+  push: { branches: [main] }
+  workflow_dispatch: {}
+permissions: { id-token: write, contents: read }
+env:
+  TF_VAR_aws_region: ${{ vars.AWS_REGION }}
+jobs:
+  deploy:
+    if: ${{ vars.LAB_BOOTSTRAPPED == 'true' }}
+    runs-on: ubuntu-latest
+    environment: dev
+    steps:
+      - uses: actions/checkout@v6
+      - uses: aws-actions/configure-aws-credentials@v6.2.3
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+          allowed-account-ids: ${{ vars.AWS_ACCOUNT_ID }}
+      - uses: hashicorp/setup-terraform@v3
+      - run: |
+          terraform -chdir=terraform init             -backend-config="bucket=${{ vars.TF_STATE_BUCKET }}"             -backend-config="key=aos-warranty/dev/terraform.tfstate"             -backend-config="region=${{ vars.AWS_REGION }}"             -backend-config="encrypt=true"             -backend-config="use_lockfile=true"
+      - run: terraform -chdir=terraform plan -out=tfplan
+      - run: terraform -chdir=terraform apply -auto-approve tfplan
+      - run: |
+          BUCKET=$(terraform -chdir=terraform output -raw data_bucket_name)
+          aws s3 cp glue/seed_source.py "s3://${BUCKET}/scripts/seed_source.py"
+          aws s3 cp glue/ingest_raw.py "s3://${BUCKET}/scripts/ingest_raw.py"
+          aws s3 cp glue/transform_silver.py "s3://${BUCKET}/scripts/transform_silver.py"
+      - run: bash scripts/run_full_pipeline.sh false

@@ -1,0 +1,3 @@
+CREATE OR REPLACE VIEW aos_warranty_gold.__VERSION__ AS
+SELECT *, CASE WHEN warranty_status='OUT_OF_WARRANTY' THEN 'REVIEW_REQUIRED' ELSE 'NORMAL' END AS policy_action
+FROM aos_warranty_silver.warranty;

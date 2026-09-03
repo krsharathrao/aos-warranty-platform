@@ -1,0 +1,5 @@
+AOS Warranty Fresh Build GitOps Master Package
+Version: v3
+Guide: Complete 45-Step Hands-On Playbook v3
+Scope: Fresh AWS build + GitHub Actions + Terraform + DevSecOps + DataOps + AIOps
+Authoritative document: docs/AOS_Warranty_Fresh_Build_GitOps_Complete_45_Step_Guide_v3.pdf
