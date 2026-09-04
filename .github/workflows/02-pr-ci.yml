@@ -25,7 +25,7 @@ jobs:
         with: { tflint_version: v0.64.0 }
       - run: cd terraform && tflint --init && tflint -f compact
       - run: pip install checkov bandit
-      - run: checkov -d terraform --compact
+      - run: checkov -d terraform --compact --quiet
       - run: bandit -r glue aiops
       - uses: aquasecurity/trivy-action@v0.36.0
         with: { scan-type: config, scan-ref: terraform, severity: 'HIGH,CRITICAL', exit-code: '1' }
