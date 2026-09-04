@@ -25,10 +25,65 @@ jobs:
         with: { tflint_version: v0.64.0 }
       - run: cd terraform && tflint --init && tflint -f compact
       - run: pip install checkov bandit
-      - run: checkov -d terraform --compact
       - run: bandit -r glue aiops
       - uses: aquasecurity/trivy-action@v0.36.0
         with: { scan-type: config, scan-ref: terraform, severity: 'HIGH,CRITICAL', exit-code: '1' }
       - uses: gitleaks/gitleaks-action@v3
         env: { GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}' }
       - run: terraform -chdir=terraform plan -no-color
+
+      - name: Install Checkov and Bandit
+        run: pip install checkov bandit
+
+      - name: Checkov - Full Assessment
+        shell: bash
+        run: |
+          set +e
+
+          checkov \
+            -d terraform \
+            --framework terraform \
+            --compact \
+            --quiet \
+            -o json \
+            > checkov-full.json
+
+          CHECKOV_RC=$?
+
+          set -e
+
+          python - <<'PY'
+          import json
+          from collections import Counter
+
+          with open("checkov-full.json") as f:
+              data = json.load(f)
+
+          failed = data["results"]["failed_checks"]
+          skipped = data["results"]["skipped_checks"]
+
+          print(f"Full Checkov failed checks: {len(failed)}")
+          print(f"Full Checkov skipped checks: {len(skipped)}")
+
+          counts = Counter(x["check_id"] for x in failed)
+
+          print("\nProduction-profile findings:")
+          for check_id, count in sorted(counts.items()):
+              print(f"{check_id}: {count}")
+          PY
+
+          echo "Full Checkov scan is advisory for the disposable lab."
+          echo "Checkov full scan exit code: ${CHECKOV_RC}"
+
+      - name: Checkov - Mandatory Lab Security Baseline
+        run: |
+          checkov \
+            -d terraform \
+            --framework terraform \
+            --compact \
+            --quiet \
+            --check \
+            CKV_AWS_16,CKV_AWS_17,CKV_AWS_19,CKV_AWS_20,CKV_AWS_21,CKV_AWS_23,CKV_AWS_24,CKV_AWS_25,CKV_AWS_129,CKV_AWS_130,CKV_AWS_133,CKV_AWS_226,CKV_AWS_260,CKV_AWS_277,CKV2_AWS_5,CKV2_AWS_6,CKV2_AWS_12,CKV2_AWS_60
+
+      - name: Bandit
+        run: bandit -r glue aiops

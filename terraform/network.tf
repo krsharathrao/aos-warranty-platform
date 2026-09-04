@@ -149,3 +149,14 @@ resource "aws_vpc_endpoint" "s3" {
     Name = "aos-s3-endpoint"
   }
 }
+
+resource "aws_default_security_group" "default" {
+  vpc_id = aws_vpc.main.id
+
+  ingress = []
+  egress  = []
+
+  tags = {
+    Name = "aos-default-sg-restricted"
+  }
+}

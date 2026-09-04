@@ -33,5 +33,13 @@ resource "aws_db_instance" "postgres" {
   skip_final_snapshot = true
   apply_immediately   = true
 
-  backup_retention_period = 1
+  backup_retention_period    = 1
+  auto_minor_version_upgrade = true
+
+  copy_tags_to_snapshot = true
+
+  enabled_cloudwatch_logs_exports = [
+    "postgresql",
+    "upgrade"
+  ]
 }
