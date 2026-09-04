@@ -160,3 +160,4 @@ resource "aws_default_security_group" "default" {
     Name = "aos-default-sg-restricted"
   }
 }
+
