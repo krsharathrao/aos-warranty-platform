@@ -70,3 +70,4 @@ Follow `demos/STEP_42_DRIFT_DEMO.md`. Use a harmless manual S3 tag such as `Drif
 - No database password committed to Git; Glue retrieves the RDS-managed secret from Secrets Manager.
 - DataOps failure blocks Gold promotion.
 - AIOps is advisory only and has no network-remediation permissions.
+# GitOps validation

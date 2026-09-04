@@ -46,14 +46,14 @@ resource "aws_iam_role_policy" "aiops" {
 }
 
 resource "aws_lambda_function" "aiops" {
-  function_name    = "aos-aiops-rca"
-  role             = aws_iam_role.aiops.arn
-  runtime          = "python3.13"
-  handler          = "lambda_function.lambda_handler"
-  filename         = data.archive_file.aiops.output_path
-  source_code_hash = data.archive_file.aiops.output_base64sha256
-  timeout          = 30
-
+  function_name                  = "aos-aiops-rca"
+  role                           = aws_iam_role.aiops.arn
+  runtime                        = "python3.13"
+  handler                        = "lambda_function.lambda_handler"
+  filename                       = data.archive_file.aiops.output_path
+  source_code_hash               = data.archive_file.aiops.output_base64sha256
+  timeout                        = 30
+  reserved_concurrent_executions = 2
   environment {
     variables = {
       BEDROCK_MODEL_ID = var.bedrock_model_id

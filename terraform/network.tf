@@ -53,11 +53,14 @@ resource "aws_route_table_association" "private_b" {
 }
 
 resource "aws_security_group" "glue" {
-  name   = "aos-glue-sg"
-  vpc_id = aws_vpc.main.id
+  # checkov:skip=CKV2_AWS_5:Glue SG is attached through aws_glue_connection; Glue creates service-managed ENIs dynamically at job runtime.
+
+  name        = "aos-glue-sg"
+  description = "Security group for AWS Glue Spark workers and Glue-managed ENIs"
+  vpc_id      = aws_vpc.main.id
 
   ingress {
-    description = "Glue self-reference"
+    description = "Allow intra-Glue Spark worker communication"
     from_port   = 0
     to_port     = 65535
     protocol    = "tcp"
@@ -65,6 +68,7 @@ resource "aws_security_group" "glue" {
   }
 
   egress {
+    description = "Allow Glue workers to reach RDS, VPC endpoints and AWS services"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
@@ -73,11 +77,12 @@ resource "aws_security_group" "glue" {
 }
 
 resource "aws_security_group" "rds" {
-  name   = "aos-rds-sg"
-  vpc_id = aws_vpc.main.id
+  name        = "aos-rds-sg"
+  description = "Security group for private PostgreSQL access from AWS Glue"
+  vpc_id      = aws_vpc.main.id
 
   ingress {
-    description     = "PostgreSQL from Glue"
+    description     = "Allow PostgreSQL TCP 5432 from AWS Glue only"
     from_port       = 5432
     to_port         = 5432
     protocol        = "tcp"
@@ -85,6 +90,7 @@ resource "aws_security_group" "rds" {
   }
 
   egress {
+    description = "Allow outbound responses from the PostgreSQL instance"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
@@ -93,11 +99,12 @@ resource "aws_security_group" "rds" {
 }
 
 resource "aws_security_group" "vpce" {
-  name   = "aos-vpce-sg"
-  vpc_id = aws_vpc.main.id
+  name        = "aos-vpce-sg"
+  description = "Security group for private AWS interface VPC endpoints"
+  vpc_id      = aws_vpc.main.id
 
   ingress {
-    description     = "HTTPS from Glue"
+    description     = "Allow HTTPS TCP 443 from AWS Glue to interface endpoints"
     from_port       = 443
     to_port         = 443
     protocol        = "tcp"
@@ -105,6 +112,7 @@ resource "aws_security_group" "vpce" {
   }
 
   egress {
+    description = "Allow interface endpoint response traffic"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
